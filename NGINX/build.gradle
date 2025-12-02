@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+group = 'com.yourname.nginx'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    implementation 'org.apache.commons:commons-collections4:4.4'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+checkstyle {
+    toolVersion = '10.17.0'
+    configFile = rootProject.file('checkstyle.xml')
+    ignoreFailures = false
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.gonol.nginx.Main'
+        )
+    }
+}

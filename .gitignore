@@ -1,0 +1,24 @@
+# Gradle
+/.gradle/
+/build/
+**/build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+/.idea/
+/*.iml
+.vscode/
+
+# Application config (don't commit)
+app.properties
+
+# Data files (optional)
+data/
+*.log
+*.json
+
+# Keep gradlew and gradle wrapper, but ignore local caches
+.gradle/
