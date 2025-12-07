@@ -24,19 +24,14 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x $GITHUB_WORKSPACE/gradlew
 
-      # 3. Проверка прав gradlew (отладка)
-      - name: Check gradlew permissions
-        if: runner.os != 'Windows'
-        run: ls -l $GITHUB_WORKSPACE/gradlew
-
-      # 4. Настройка JDK
+      # 3. Настройка JDK
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
-      # 5. Кэширование Gradle
+      # 4. Кэширование Gradle
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
@@ -47,20 +42,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 6. Сборка проекта и запуск модуля NGINX
+      # 5. Сборка проекта и запуск NGINX
       - name: Build project and run NGINX module
-        run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            gradlew :NGINX:build :NGINX:run --no-configuration-cache
-          else
-            bash ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
-          fi
+        shell: bash
+        run: ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
 
-      # 7. Статический анализ Checkstyle
+      # 6. Статический анализ Checkstyle
       - name: Run Checkstyle
-        run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            gradlew :NGINX:checkstyleMain --no-configuration-cache
-          else
-            bash ./gradlew :NGINX:checkstyleMain --no-configuration-cache
-          fi
+        shell: bash
+        run: ./gradlew :NGINX:checkstyleMain --no-configuration-cache
