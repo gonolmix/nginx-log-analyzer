@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'checkstyle'
 }
 
 java {
@@ -36,6 +37,12 @@ tasks.jar {
         )
     }
 }
+checkstyle {
+    toolVersion = "10.12.1"   // последняя версия на момент 2025
+    configDirectory = file("${rootDir}/config/checkstyle") // папка с rules
+    ignoreFailures = false     // чтобы сборка падала при ошибках
+}
+tasks.check.dependsOn checkstyleMain
 tasks.named('run') {
     outputs.upToDateWhen { false } // предотвращает кеширование
 }

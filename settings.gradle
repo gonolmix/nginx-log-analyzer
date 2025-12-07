@@ -11,7 +11,4 @@ plugins {
 }
 
 rootProject.name = 'nginx-log-analyzer'
-include('lib')
-include 'src'
 include 'NGINX'
-
