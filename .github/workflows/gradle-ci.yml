@@ -8,26 +8,35 @@ on:
 
 jobs:
   build:
-    # Настройка matrix для разных ОС
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         java: [17]
-    
+    runs-on: ${{ matrix.os }}
+
     steps:
       # 1. Checkout кода
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Setup JDK
+      # 2. Сделать gradlew исполняемым (только для Linux/macOS)
+      - name: Make Gradle Wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x $GITHUB_WORKSPACE/gradlew
+
+      # 3. Проверка прав gradlew (отладка)
+      - name: Check gradlew permissions
+        if: runner.os != 'Windows'
+        run: ls -l $GITHUB_WORKSPACE/gradlew
+
+      # 4. Настройка JDK
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
-      # 3. Кэширование Gradle
+      # 5. Кэширование Gradle
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
@@ -38,12 +47,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 4. Собираем проект и запускаем run для модуля NGINX
+      # 6. Сборка проекта и запуск модуля NGINX
       - name: Build project and run NGINX module
         run: |
-          ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            gradlew :NGINX:build :NGINX:run --no-configuration-cache
+          else
+            bash ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
+          fi
 
-      # 5. Статический анализ Checkstyle
+      # 7. Статический анализ Checkstyle
       - name: Run Checkstyle
         run: |
-          ./gradlew :NGINX:checkstyleMain --no-configuration-cache
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            gradlew :NGINX:checkstyleMain --no-configuration-cache
+          else
+            bash ./gradlew :NGINX:checkstyleMain --no-configuration-cache
+          fi
