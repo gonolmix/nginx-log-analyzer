@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'checkstyle'
+    id 'application'
 }
 
 java {
@@ -22,17 +23,25 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
-
+application {
+    mainClass = 'com.gonol.nginx.Main'
+}
 tasks.test {
     useJUnitPlatform()
 }
 
 checkstyle {
-    toolVersion = '10.17.0'
+    toolVersion = '10.10.0'
     configFile = rootProject.file('checkstyle.xml')
+}
+tasks.withType(Checkstyle) {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    // не игнорируем ошибки — сборка должна падать
     ignoreFailures = false
 }
-
 tasks.jar {
     manifest {
         attributes(

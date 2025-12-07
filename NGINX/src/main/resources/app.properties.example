@@ -1,0 +1,10 @@
+# Путь к лог-файлу
+log.file.path=./data/access.log
+# Количество IP-адресов для топа
+report.top.ip.count=10
+# User-Agent для поиска
+filter.user.agent=curl/7.68.0
+# Тип вывода: STDOUT или FILE
+output.target=STDOUT
+# Если output.target=FILE — путь до файла
+output.file.path=./data/report.json
