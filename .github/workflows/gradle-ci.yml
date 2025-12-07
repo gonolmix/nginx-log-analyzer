@@ -8,26 +8,30 @@ on:
 
 jobs:
   build:
-    # Настройка matrix для разных ОС
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         java: [17]
+    runs-on: ${{ matrix.os }}
 
     steps:
       # 1. Checkout кода
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Setup JDK
+      # 2. Сделать gradlew исполняемым (для Linux/macOS)
+      - name: Make Gradle Wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x gradlew
+
+      # 3. Настройка JDK
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
-      # 3. Кэширование Gradle
+      # 4. Кэширование Gradle
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
@@ -38,12 +42,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 4. Собираем проект и запускаем run для модуля NGINX
+      # 5. Сборка проекта и запуск модуля NGINX
       - name: Build project and run NGINX module
-        run: |
-          ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
+        run: ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
 
-      # 5. Статический анализ Checkstyle
+      # 6. Статический анализ Checkstyle
       - name: Run Checkstyle
-        run: |
-          ./gradlew :NGINX:checkstyleMain --no-configuration-cache
+        run: ./gradlew :NGINX:checkstyleMain --no-configuration-cache
