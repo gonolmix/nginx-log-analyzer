@@ -135,10 +135,10 @@ jobs:
         run: chmod +x gradlew
         shell: bash
 
-      - name: Build module (:NGINX:build)
+      - name: Build module (:NGINX:build) (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: gradlew.bat :NGINX:build --no-daemon
+        run: .\gradlew.bat :NGINX:build --no-daemon
 
       - name: Build module (:NGINX:build) (Unix)
         if: runner.os != 'Windows'
@@ -148,7 +148,7 @@ jobs:
       - name: Run module (:NGINX:run) (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: gradlew.bat :NGINX:run --no-daemon
+        run: .\gradlew.bat :NGINX:run --no-daemon
 
       - name: Run module (:NGINX:run) (Unix)
         if: runner.os != 'Windows'
