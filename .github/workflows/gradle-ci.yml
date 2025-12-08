@@ -11,104 +11,146 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        java: [17]
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Java 17
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: ${{ matrix.java }}
           cache: gradle
 
-      # --- Generate access.log on Unix (bash) ---
+      - name: Cache Gradle (.gradle/caches and wrapper)
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # --------------------
+      # Generate access.log (Unix)
+      # --------------------
+      - name: Create data dir (Unix)
+        if: runner.os != 'Windows'
+        run: mkdir -p data
+        shell: bash
+
       - name: Generate access.log (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          mkdir -p data
-          cat <<'EOF' > data/access.log
-127.0.0.1 - - [01/Jan/2024:10:00:01 +0000] "GET /index.html HTTP/1.1" 200 532 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:02 +0000] "GET /about HTTP/1.1" 200 123 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:03 +0000] "GET /contact HTTP/1.1" 404 55 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:04 +0000] "POST /login HTTP/1.1" 302 0 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:05 +0000] "GET /dashboard HTTP/1.1" 200 2891 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:06 +0000] "GET /style.css HTTP/1.1" 200 9123 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:07 +0000] "GET /script.js HTTP/1.1" 200 2215 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:08 +0000] "GET /api/data HTTP/1.1" 200 761 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:09 +0000] "GET /favicon.ico HTTP/1.1" 200 4286 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:10 +0000] "GET /unknown HTTP/1.1" 404 0 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:11 +0000] "GET /home HTTP/1.1" 200 1902 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:12 +0000] "POST /api/form HTTP/1.1" 201 342 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:13 +0000] "GET /images/a.png HTTP/1.1" 200 5531 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:14 +0000] "GET /images/b.png HTTP/1.1" 200 1182 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:15 +0000] "GET /assets/main.js HTTP/1.1" 200 9812 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:16 +0000] "GET /assets/lib.js HTTP/1.1" 200 4381 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:17 +0000] "GET /robots.txt HTTP/1.1" 200 112 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:18 +0000] "GET /rss.xml HTTP/1.1" 200 993 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:19 +0000] "GET /sitemap.xml HTTP/1.1" 200 3372 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:20 +0000] "GET /status HTTP/1.1" 500 0 "-" "Mozilla/5.0"
-EOF
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:01 +0000] "GET /index.html HTTP/1.1" 200 532 "-" "Mozilla/5.0"' > data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:02 +0000] "GET /about HTTP/1.1" 200 123 "-" "curl/7.68.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:03 +0000] "GET /contact HTTP/1.1" 404 55 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:04 +0000] "POST /login HTTP/1.1" 302 0 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:05 +0000] "GET /dashboard HTTP/1.1" 200 2891 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:06 +0000] "GET /style.css HTTP/1.1" 200 9123 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:07 +0000] "GET /script.js HTTP/1.1" 200 2215 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:08 +0000] "GET /api/data HTTP/1.1" 200 761 "-" "curl/7.68.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:09 +0000] "GET /favicon.ico HTTP/1.1" 200 4286 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:10 +0000] "GET /unknown HTTP/1.1" 404 0 "-" "curl/7.68.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:11 +0000] "GET /home HTTP/1.1" 200 1902 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:12 +0000] "POST /api/form HTTP/1.1" 201 342 "-" "curl/7.68.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:13 +0000] "GET /images/a.png HTTP/1.1" 200 5531 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:14 +0000] "GET /images/b.png HTTP/1.1" 200 1182 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:15 +0000] "GET /assets/main.js HTTP/1.1" 200 9812 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:16 +0000] "GET /assets/lib.js HTTP/1.1" 200 4381 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:17 +0000] "GET /robots.txt HTTP/1.1" 200 112 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:18 +0000] "GET /rss.xml HTTP/1.1" 200 993 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:19 +0000] "GET /sitemap.xml HTTP/1.1" 200 3372 "-" "Mozilla/5.0"' >> data/access.log
+          printf '%s\n' '127.0.0.1 - - [01/Jan/2024:10:00:20 +0000] "GET /status HTTP/1.1" 500 0 "-" "Mozilla/5.0"' >> data/access.log
 
-      # --- Generate access.log on Windows (PowerShell) ---
+      # --------------------
+      # Generate access.log (Windows)
+      # --------------------
+      - name: Create data dir (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path data | Out-Null
+
       - name: Generate access.log (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path data | Out-Null
-          @'
-127.0.0.1 - - [01/Jan/2024:10:00:01 +0000] "GET /index.html HTTP/1.1" 200 532 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:02 +0000] "GET /about HTTP/1.1" 200 123 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:03 +0000] "GET /contact HTTP/1.1" 404 55 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:04 +0000] "POST /login HTTP/1.1" 302 0 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:05 +0000] "GET /dashboard HTTP/1.1" 200 2891 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:06 +0000] "GET /style.css HTTP/1.1" 200 9123 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:07 +0000] "GET /script.js HTTP/1.1" 200 2215 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:08 +0000] "GET /api/data HTTP/1.1" 200 761 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:09 +0000] "GET /favicon.ico HTTP/1.1" 200 4286 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:10 +0000] "GET /unknown HTTP/1.1" 404 0 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:11 +0000] "GET /home HTTP/1.1" 200 1902 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:12 +0000] "POST /api/form HTTP/1.1" 201 342 "-" "curl/7.68.0"
-127.0.0.1 - - [01/Jan/2024:10:00:13 +0000] "GET /images/a.png HTTP/1.1" 200 5531 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:14 +0000] "GET /images/b.png HTTP/1.1" 200 1182 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:15 +0000] "GET /assets/main.js HTTP/1.1" 200 9812 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:16 +0000] "GET /assets/lib.js HTTP/1.1" 200 4381 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:17 +0000] "GET /robots.txt HTTP/1.1" 200 112 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:18 +0000] "GET /rss.xml HTTP/1.1" 200 993 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:19 +0000] "GET /sitemap.xml HTTP/1.1" 200 3372 "-" "Mozilla/5.0"
-127.0.0.1 - - [01/Jan/2024:10:00:20 +0000] "GET /status HTTP/1.1" 500 0 "-" "Mozilla/5.0"
-'@ | Out-File -Encoding UTF8 data/access.log
+          $lines = @(
+            '127.0.0.1 - - [01/Jan/2024:10:00:01 +0000] "GET /index.html HTTP/1.1" 200 532 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:02 +0000] "GET /about HTTP/1.1" 200 123 "-" "curl/7.68.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:03 +0000] "GET /contact HTTP/1.1" 404 55 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:04 +0000] "POST /login HTTP/1.1" 302 0 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:05 +0000] "GET /dashboard HTTP/1.1" 200 2891 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:06 +0000] "GET /style.css HTTP/1.1" 200 9123 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:07 +0000] "GET /script.js HTTP/1.1" 200 2215 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:08 +0000] "GET /api/data HTTP/1.1" 200 761 "-" "curl/7.68.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:09 +0000] "GET /favicon.ico HTTP/1.1" 200 4286 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:10 +0000] "GET /unknown HTTP/1.1" 404 0 "-" "curl/7.68.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:11 +0000] "GET /home HTTP/1.1" 200 1902 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:12 +0000] "POST /api/form HTTP/1.1" 201 342 "-" "curl/7.68.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:13 +0000] "GET /images/a.png HTTP/1.1" 200 5531 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:14 +0000] "GET /images/b.png HTTP/1.1" 200 1182 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:15 +0000] "GET /assets/main.js HTTP/1.1" 200 9812 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:16 +0000] "GET /assets/lib.js HTTP/1.1" 200 4381 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:17 +0000] "GET /robots.txt HTTP/1.1" 200 112 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:18 +0000] "GET /rss.xml HTTP/1.1" 200 993 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:19 +0000] "GET /sitemap.xml HTTP/1.1" 200 3372 "-" "Mozilla/5.0"',
+            '127.0.0.1 - - [01/Jan/2024:10:00:20 +0000] "GET /status HTTP/1.1" 500 0 "-" "Mozilla/5.0"'
+          )
+          $lines | Set-Content -Path data/access.log -Encoding UTF8
 
-      - name: Generate app.properties (cross-platform)
+      # --------------------
+      # Generate app.properties (cross-platform)
+      # --------------------
+      - name: Generate app.properties (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p NGINX/src/main/resources
-          cat > NGINX/src/main/resources/app.properties <<'PROP'
-log.file.path=./data/access.log
-report.top.ip.count=10
-filter.user.agent=curl/7.68.0
-output.target=STDOUT
-PROP
+          printf '%s\n' "log.file.path=./data/access.log" > NGINX/src/main/resources/app.properties
+          printf '%s\n' "report.top.ip.count=10" >> NGINX/src/main/resources/app.properties
+          printf '%s\n' "filter.user.agent=curl/7.68.0" >> NGINX/src/main/resources/app.properties
+          printf '%s\n' "output.target=STDOUT" >> NGINX/src/main/resources/app.properties
+
+      - name: Generate app.properties (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path NGINX/src/main/resources | Out-Null
+          $props = @(
+            'log.file.path=./data/access.log',
+            'report.top.ip.count=10',
+            'filter.user.agent=curl/7.68.0',
+            'output.target=STDOUT'
+          )
+          $props | Set-Content -Path NGINX/src/main/resources/app.properties -Encoding UTF8
 
       - name: Make Gradle wrapper executable (Unix)
         if: runner.os != 'Windows'
         run: chmod +x gradlew
+        shell: bash
 
-      - name: Build (Gradle)
-        run: |
-          if [ "${RUNNER_OS}" = "Windows" ]; then
-            gradlew build --no-daemon
-          else
-            ./gradlew build --no-daemon
-          fi
+      - name: Build module (:NGINX:build)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: gradlew.bat :NGINX:build --no-daemon
 
-      - name: Run module (:NGINX:run)
-        run: |
-          if [ "${RUNNER_OS}" = "Windows" ]; then
-            gradlew :NGINX:run --no-daemon
-          else
-            ./gradlew :NGINX:run --no-daemon
-          fi
+      - name: Build module (:NGINX:build) (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./gradlew :NGINX:build --no-daemon
+
+      - name: Run module (:NGINX:run) (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: gradlew.bat :NGINX:run --no-daemon
+
+      - name: Run module (:NGINX:run) (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./gradlew :NGINX:run --no-daemon
