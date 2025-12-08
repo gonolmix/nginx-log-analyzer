@@ -38,11 +38,12 @@ jobs:
         shell: bash
         run: |
           mkdir -p NGINX/data
-          touch NGINX/data/access.log
-          cat <<EOF > NGINX/src/main/resources/application.properties
+          echo "GENERATED LOG" > NGINX/data/access.log
+
+          mkdir -p NGINX/src/main/resources
+          cat <<EOF > NGINX/src/main/resources/app.properties
           server.port=8080
-          logging.file.path=./data
-          logging.file.name=access.log
+          log.path=./data/access.log
           EOF
 
       - name: Make gradlew executable (Linux/macOS)
