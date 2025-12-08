@@ -1,53 +1,101 @@
-name: Gradle CI
+name: NGINX Log Analyzer CI
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
   build:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        java: [17]
+
     runs-on: ${{ matrix.os }}
 
     steps:
-      # 1. Checkout кода
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Сделать gradlew исполняемым (только для Linux/macOS)
-      - name: Make Gradle Wrapper executable
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Generate access.log (UNIX)
         if: runner.os != 'Windows'
-        run: chmod +x $GITHUB_WORKSPACE/gradlew
+        run: |
+          mkdir -p data
+          cat <<EOF > data/access.log
+127.0.0.1 - - [01/Jan/2024:10:00:01 +0000] "GET /index.html HTTP/1.1" 200 532
+127.0.0.1 - - [01/Jan/2024:10:00:02 +0000] "GET /about HTTP/1.1" 200 123
+127.0.0.1 - - [01/Jan/2024:10:00:03 +0000] "GET /contact HTTP/1.1" 404 55
+127.0.0.1 - - [01/Jan/2024:10:00:04 +0000] "POST /login HTTP/1.1" 302 0
+127.0.0.1 - - [01/Jan/2024:10:00:05 +0000] "GET /dashboard HTTP/1.1" 200 2891
+127.0.0.1 - - [01/Jan/2024:10:00:06 +0000] "GET /style.css HTTP/1.1" 200 9123
+127.0.0.1 - - [01/Jan/2024:10:00:07 +0000] "GET /script.js HTTP/1.1" 200 2215
+127.0.0.1 - - [01/Jan/2024:10:00:08 +0000] "GET /api/data HTTP/1.1" 200 761
+127.0.0.1 - - [01/Jan/2024:10:00:09 +0000] "GET /favicon.ico HTTP/1.1" 200 4286
+127.0.0.1 - - [01/Jan/2024:10:00:10 +0000] "GET /unknown HTTP/1.1" 404 0
+127.0.0.1 - - [01/Jan/2024:10:00:11 +0000] "GET /home HTTP/1.1" 200 1902
+127.0.0.1 - - [01/Jan/2024:10:00:12 +0000] "POST /api/form HTTP/1.1" 201 342
+127.0.0.1 - - [01/Jan/2024:10:00:13 +0000] "GET /images/a.png HTTP/1.1" 200 5531
+127.0.0.1 - - [01/Jan/2024:10:00:14 +0000] "GET /images/b.png HTTP/1.1" 200 1182
+127.0.0.1 - - [01/Jan/2024:10:00:15 +0000] "GET /assets/main.js HTTP/1.1" 200 9812
+127.0.0.1 - - [01/Jan/2024:10:00:16 +0000] "GET /assets/lib.js HTTP/1.1" 200 4381
+127.0.0.1 - - [01/Jan/2024:10:00:17 +0000] "GET /robots.txt HTTP/1.1" 200 112
+127.0.0.1 - - [01/Jan/2024:10:00:18 +0000] "GET /rss.xml HTTP/1.1" 200 993
+127.0.0.1 - - [01/Jan/2024:10:00:19 +0000] "GET /sitemap.xml HTTP/1.1" 200 3372
+127.0.0.1 - - [01/Jan/2024:10:00:20 +0000] "GET /status HTTP/1.1" 500 0
+EOF
 
-      # 3. Настройка JDK
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: ${{ matrix.java }}
+      - name: Generate access.log (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path data | Out-Null
+          @"
+127.0.0.1 - - [01/Jan/2024:10:00:01 +0000] "GET /index.html HTTP/1.1" 200 532
+127.0.0.1 - - [01/Jan/2024:10:00:02 +0000] "GET /about HTTP/1.1" 200 123
+127.0.0.1 - - [01/Jan/2024:10:00:03 +0000] "GET /contact HTTP/1.1" 404 55
+127.0.0.1 - - [01/Jan/2024:10:00:04 +0000] "POST /login HTTP/1.1" 302 0
+127.0.0.1 - - [01/Jan/2024:10:00:05 +0000] "GET /dashboard HTTP/1.1" 200 2891
+127.0.0.1 - - [01/Jan/2024:10:00:06 +0000] "GET /style.css HTTP/1.1" 200 9123
+127.0.0.1 - - [01/Jan/2024:10:00:07 +0000] "GET /script.js HTTP/1.1" 200 2215
+127.0.0.1 - - [01/Jan/2024:10:00:08 +0000] "GET /api/data HTTP/1.1" 200 761
+127.0.0.1 - - [01/Jan/2024:10:00:09 +0000] "GET /favicon.ico HTTP/1.1" 200 4286
+127.0.0.1 - - [01/Jan/2024:10:00:10 +0000] "GET /unknown HTTP/1.1" 404 0
+127.0.0.1 - - [01/Jan/2024:10:00:11 +0000] "GET /home HTTP/1.1" 200 1902
+127.0.0.1 - - [01/Jan/2024:10:00:12 +0000] "POST /api/form HTTP/1.1" 201 342
+127.0.0.1 - - [01/Jan/2024:10:00:13 +0000] "GET /images/a.png HTTP/1.1" 200 5531
+127.0.0.1 - - [01/Jan/2024:10:00:14 +0000] "GET /images/b.png HTTP/1.1" 200 1182
+127.0.0.1 - - [01/Jan/2024:10:00:15 +0000] "GET /assets/main.js HTTP/1.1" 200 9812
+127.0.0.1 - - [01/Jan/2024:10:00:16 +0000] "GET /assets/lib.js HTTP/1.1" 200 4381
+127.0.0.1 - - [01/Jan/2024:10:00:17 +0000] "GET /robots.txt HTTP/1.1" 200 112
+127.0.0.1 - - [01/Jan/2024:10:00:18 +0000] "GET /rss.xml HTTP/1.1" 200 993
+127.0.0.1 - - [01/Jan/2024:10:00:19 +0000] "GET /sitemap.xml HTTP/1.1" 200 3372
+127.0.0.1 - - [01/Jan/2024:10:00:20 +0000] "GET /status HTTP/1.1" 500 0
+"@ | Out-File -Encoding UTF8 data/access.log
 
-      # 4. Кэширование Gradle
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Generate app.properties (cross-platform)
+        run: |
+          mkdir -p NGINX/src/main/resources
+          cat <<EOF > NGINX/src/main/resources/app.properties
+log.file.path=./data/access.log
+output.console.enabled=true
+output.file.enabled=false
+EOF
 
-      # 5. Сборка проекта и запуск NGINX
-      - name: Build project and run NGINX module
-        shell: bash
-        run: ./gradlew :NGINX:build :NGINX:run --no-configuration-cache
+      - name: Grant Gradle wrapper permissions (UNIX)
+        if: runner.os != 'Windows'
+        run: chmod +x gradlew
 
-      # 6. Статический анализ Checkstyle
-      - name: Run Checkstyle
-        shell: bash
-        run: ./gradlew :NGINX:checkstyleMain --no-configuration-cache
+      - name: Build
+        run: ./gradlew build --no-daemon
+
+      - name: Run analyzer
+        run: ./gradlew :NGINX:run --no-daemon
