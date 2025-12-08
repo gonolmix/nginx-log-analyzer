@@ -51,7 +51,10 @@ C:\Users\<ВашеИмя>\Projects\
 ## 3. Создание файла `access.log`
 
 В папке проекта создайте файл `access.log` (например, рядом с корнем `nginx-log-analyzer\data\access.log`).
-
+Создать файл app.properties можно следующей командой:
+```
+touch access.log
+```
 Пример содержимого файла с 20 записями:
 
 ```text
@@ -81,12 +84,16 @@ C:\Users\<ВашеИмя>\Projects\
 
 ## 4. Создание файла `app.properties`
 
+Создать файл app.properties можно следующей командой:
+```
+touch app.properties
+```
+
 В папке:
 
 ```
 nginx-log-analyzer\NGINX\src\main\resources
 ```
-
 создайте файл `app.properties` со следующим содержимым:
 
 ```properties
