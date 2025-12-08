@@ -94,7 +94,7 @@ touch app.properties
 ```
 nginx-log-analyzer\NGINX\src\main\resources
 ```
-создайте файл `app.properties` со следующим содержимым:
+создайте файл `app.properties` со следующим содержимым (не забудьте поменять путь к .log файлу справильным форматом Диск:/путь/):
 
 ```properties
 # Путь к лог-файлу
